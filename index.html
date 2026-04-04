@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tactical Atom Zoom</title>
+    <title>Tactical Atom Zoom - Enhanced</title>
     <style>
         * { box-sizing: border-box; }
         body { 
             margin: 0; 
             overflow: hidden; 
-            background-color: #000; 
+            background: linear-gradient(135deg, #000000 0%, #0a0e27 100%);
             font-family: 'Courier New', Courier, monospace;
             user-select: none;
         }
 
-        /* --- THE HUD (Heads Up Display) --- */
+        /* --- MAIN HUD --- */
         #hud-container {
             position: absolute;
             top: 50%;
@@ -22,151 +22,287 @@
             color: #00ffff;
             text-align: right;
             pointer-events: none;
-            border-right: 2px solid #00ffff;
-            padding-right: 15px;
+            border-right: 3px solid #00ffff;
+            padding-right: 20px;
             z-index: 10;
+            box-shadow: -10px 0 30px rgba(0, 255, 255, 0.2);
         }
 
         #zoom-label {
             font-size: 14px;
-            letter-spacing: 2px;
-            opacity: 0.7;
-            margin-bottom: 5px;
+            letter-spacing: 3px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
         }
 
         #zoom-value {
-            font-size: 48px;
+            font-size: 64px;
             font-weight: bold;
-            text-shadow: 0 0 10px #00ffff;
+            text-shadow: 0 0 20px #00ffff, 0 0 40px #0088ff;
             transition: color 0.2s, text-shadow 0.2s;
+            letter-spacing: 2px;
         }
 
         #zoom-bar-container {
-            width: 10px;
-            height: 200px;
-            border: 1px solid #333;
+            width: 12px;
+            height: 250px;
+            border: 2px solid #333;
             position: absolute;
-            right: -6px;
+            right: -10px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
         #zoom-bar-fill {
             width: 100%;
             height: 0%;
-            background: #00ffff;
+            background: linear-gradient(180deg, #ff00ff, #00ffff, #00ff00);
             position: absolute;
             bottom: 0;
-            box-shadow: 0 0 10px #00ffff;
-            transition: height 0.1s linear, background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 15px #00ffff, inset 0 0 5px rgba(255,255,255,0.3);
+            transition: height 0.1s linear, background 0.2s;
         }
 
-        /* Marker lines for 10, 20, 30...  */
-        .tick {
+        /* --- ENERGY LEVELS --- */
+        #energy-display {
             position: absolute;
-            right: 40px;
-            height: 1px;
-            width: 10px;
-            background: rgba(0, 255, 255, 0.3);
-        }
-
-        /* Buttons at bottom */
-        #controls-ui {
-            position: absolute;
-            bottom: 30px;
-            width: 100%;
-            text-align: center;
+            top: 30px;
+            right: 30px;
+            color: #00ff88;
+            font-size: 11px;
             pointer-events: none;
-            z-index: 10;
-        }
-
-        button {
-            pointer-events: auto;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid #00ffff;
-            color: #00ffff;
-            padding: 10px 20px;
-            margin: 0 10px;
-            font-family: 'Courier New';
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 12px;
             letter-spacing: 1px;
-            transition: 0.3s;
-            outline: none;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            padding: 10px;
+            border-radius: 3px;
         }
 
-        button:hover { 
-            background: #00ffff;
-            color: #000;
-            box-shadow: 0 0 15px #00ffff;
+        .energy-bar {
+            width: 150px;
+            height: 6px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid #00ff88;
+            margin: 5px 0;
+            overflow: hidden;
         }
 
-        button.active {
-            background: #00ffff;
-            color: #000;
-            box-shadow: 0 0 20px #00ffff;
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #ffff00);
+            box-shadow: 0 0 8px #00ff88;
         }
 
-        /* Info panel */
+        /* --- INFO PANEL --- */
         #info-panel {
             position: absolute;
             top: 30px;
             left: 30px;
             color: #00ffff;
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 1px;
             pointer-events: none;
-            border-left: 2px solid #00ffff;
-            padding-left: 15px;
-            line-height: 1.8;
-            max-width: 250px;
+            border-left: 3px solid #00ffff;
+            padding: 15px 15px 15px 20px;
+            line-height: 2;
+            max-width: 300px;
+            background: rgba(0, 255, 255, 0.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
         }
 
         .info-label {
             opacity: 0.6;
             text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
 
+        .info-row {
+            margin: 3px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        /* --- CONTROLS --- */
+        #controls-ui {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            pointer-events: auto;
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 24px;
+            margin: 5px;
+            font-family: 'Courier New';
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            transition: 0.3s;
+            outline: none;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        button:hover { 
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 25px #00ffff;
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            color: #000;
+            box-shadow: 0 0 30px #00ffff, inset 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* --- STATS & FPS --- */
+        #stats {
+            position: absolute;
+            bottom: 40px;
+            left: 30px;
+            color: #ffff00;
+            font-size: 10px;
+            opacity: 0.8;
+            pointer-events: none;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px;
+            border: 1px solid #ffff00;
+            border-radius: 3px;
+            line-height: 1.6;
+        }
+
+        /* --- LOADING & EFFECTS --- */
         #loading { 
             position: absolute; 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%,-50%); 
             color: #00ffff;
-            font-size: 18px;
-            letter-spacing: 2px;
+            font-size: 20px;
+            letter-spacing: 3px;
+            animation: pulse 1.5s infinite;
         }
 
-        /* Performance stats */
-        #stats {
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* --- SCANLINES EFFECT --- */
+        #scanlines {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            color: #00ffff;
-            font-size: 11px;
-            opacity: 0.7;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
-            font-family: monospace;
+            z-index: 5;
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: scanlineShift 8s linear infinite;
+        }
+
+        @keyframes scanlineShift {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        /* --- PARTICLES/TRAILS --- */
+        .particle-trail {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- WARNINGS --- */
+        #warning-panel {
+            position: absolute;
+            top: 50%;
+            left: 30px;
+            transform: translateY(-50%);
+            color: #ff3333;
+            font-size: 12px;
+            pointer-events: none;
+            border-left: 3px solid #ff3333;
+            padding: 15px;
+            display: none;
+            background: rgba(255, 0, 0, 0.1);
+            opacity: 0.8;
+            animation: warning-pulse 0.5s infinite alternate;
+        }
+
+        @keyframes warning-pulse {
+            0% { text-shadow: 0 0 5px #ff3333; }
+            100% { text-shadow: 0 0 20px #ff3333; }
+        }
+
+        /* LIMITS INDICATOR */
+        #limits {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #888;
+            font-size: 9px;
+            letter-spacing: 1px;
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
 
-    <div id="loading">INITIALIZING ATOM VISUALIZATION...</div>
+    <div id="scanlines"></div>
+    <div id="loading">⚛ INITIALIZING QUANTUM FIELD ⚛</div>
 
     <div id="info-panel">
-        <div class="info-label">● SYSTEM STATUS</div>
-        <div id="current-view">View: CLOUD</div>
-        <div id="nucleus-info">Nucleons: 20</div>
-        <div id="orbital-info">Shells: 8</div>
+        <div class="info-label">◆ SYSTEM STATUS</div>
+        <div class="info-row"><span>View:</span> <span id="current-view">CLOUD</span></div>
+        <div class="info-row"><span>Nucleons:</span> <span id="nucleus-info">20</span></div>
+        <div class="info-row"><span>Electrons:</span> <span id="electron-info">5000</span></div>
+        <div class="info-row"><span>Energy:</span> <span id="energy-info">STABLE</span></div>
+        <div class="info-row"><span>Temp:</span> <span id="temp-info">0K</span></div>
+    </div>
+
+    <div id="energy-display">
+        <div style="margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">ENERGY LEVELS</div>
+        <div class="energy-bar"><div class="energy-fill" id="energy1"></div></div>
+        <div class="energy-bar"><div class="energy-fill" id="energy2"></div></div>
+        <div class="energy-bar"><div class="energy-fill" id="energy3"></div></div>
+        <div class="energy-bar"><div class="energy-fill" id="energy4"></div></div>
+    </div>
+
+    <div id="warning-panel">
+        ⚠ CRITICAL INSTABILITY ⚠<br>
+        Quantum State Collapse Imminent
     </div>
 
     <div id="hud-container">
-        <div id="zoom-label">MAGNIFICATION</div>
+        <div id="zoom-label">⟿ MAGNIFICATION</div>
         <div id="zoom-value">0%</div>
-        
         <div id="zoom-bar-container">
             <div id="zoom-bar-fill"></div>
         </div>
@@ -174,12 +310,15 @@
 
     <div id="controls-ui">
         <button id="btn-cloud" class="active" onclick="switchView('cloud')">Probability Cloud</button>
-        <button id="btn-bohr" onclick="switchView('bohr')">Orbitals</button>
+        <button id="btn-bohr" onclick="switchView('bohr')">Orbital Model</button>
         <button id="btn-quantum" onclick="switchView('quantum')">Quantum Field</button>
-        <button id="btn-rotate" onclick="toggleRotation()">Auto-Rotate</button>
+        <button id="btn-excited" onclick="switchView('excited')">Excited State</button>
+        <button id="btn-rotate" onclick="toggleRotation()">⟳ Auto-Rotate</button>
+        <button id="btn-trails" onclick="toggleTrails()">✦ Particle Trails</button>
     </div>
 
     <div id="stats"></div>
+    <div id="limits">MAX: 5000px | 8 shells | 20 nucleons | 60fps target</div>
 
     <script type="importmap">
         {
@@ -197,84 +336,107 @@
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
+        // === CONFIGURATION & LIMITS ===
+        const CONFIG = {
+            MAX_PARTICLES: 5000,
+            MAX_SHELLS: 8,
+            MAX_NUCLEONS: 20,
+            MAX_DIST: 50,
+            MIN_DIST: 2,
+            TARGET_FPS: 60,
+            BLOOM_STRENGTH: 2.5,
+            TRAIL_LENGTH: 30
+        };
+
         document.getElementById('loading').style.display = 'none';
 
-        // --- PERFORMANCE MONITORING ---
+        // === PERFORMANCE MONITORING ===
         let frameCount = 0;
         let lastTime = performance.now();
+        let currentTemp = 0;
         const statsDiv = document.getElementById('stats');
 
         function updateStats() {
             frameCount++;
             const now = performance.now();
             if (now - lastTime >= 1000) {
-                statsDiv.innerHTML = `FPS: ${frameCount}<br>Dist: ${(camera.position.distanceTo(controls.target)).toFixed(2)}`;
+                const dist = (camera.position.distanceTo(controls.target)).toFixed(2);
+                statsDiv.innerHTML = `FPS: ${frameCount}<br>Distance: ${dist}<br>Memory: ${(performance.memory?.usedJSHeapSize / 1048576).toFixed(1)}MB`;
                 frameCount = 0;
                 lastTime = now;
             }
         }
 
-        // --- SETUP ---
+        // === SCENE SETUP ===
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.03);
+        scene.fog = new THREE.FogExp2(0x000000, 0.02);
         scene.background = new THREE.Color(0x000000);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        
-        // Define Zoom Limits
-        const MAX_DIST = 50;
-        const MIN_DIST = 2;
-        camera.position.set(0, 5, MAX_DIST);
+        camera.position.set(0, 5, CONFIG.MAX_DIST);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.minDistance = MIN_DIST;
-        controls.maxDistance = MAX_DIST;
+        controls.minDistance = CONFIG.MIN_DIST;
+        controls.maxDistance = CONFIG.MAX_DIST;
         controls.zoomSpeed = 0.3;
         controls.autoRotate = false;
         controls.autoRotateSpeed = 2.0;
         controls.enablePan = false;
-        
-        // Custom smooth zoom control
-        let targetDistance = MAX_DIST;
+
+        // === ZOOM CONTROL ===
+        let targetDistance = CONFIG.MAX_DIST;
         renderer.domElement.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomDelta = e.deltaY > 0 ? 0.5 : -0.5; // 0.5 units per scroll
-            targetDistance = Math.max(MIN_DIST, Math.min(MAX_DIST, targetDistance + zoomDelta));
+            const zoomDelta = e.deltaY > 0 ? 0.5 : -0.5;
+            targetDistance = Math.max(CONFIG.MIN_DIST, Math.min(CONFIG.MAX_DIST, targetDistance + zoomDelta));
         }, { passive: false });
 
-        // --- HUD LOGIC ---
-        const zoomValueText = document.getElementById('zoom-value');
-        const zoomBarFill = document.getElementById('zoom-bar-fill');
-        const infoPanel = document.getElementById('info-panel');
-        const currentViewText = document.getElementById('current-view');
-
-        // --- GLOW EFFECTS ---
+        // === BLOOM & POST-PROCESSING ===
         const composer = new EffectComposer(renderer);
         composer.addPass(new RenderPass(scene, camera));
-        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloom.strength = 2.0;
-        bloom.radius = 0.5;
-        bloom.threshold = 0.1;
+        const bloom = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight), 
+            1.5, 0.4, 0.85
+        );
+        bloom.strength = CONFIG.BLOOM_STRENGTH;
+        bloom.radius = 0.6;
+        bloom.threshold = 0.05;
         composer.addPass(bloom);
 
-        // --- NUCLEUS ---
+        // === HUD ELEMENTS ===
+        const zoomValueText = document.getElementById('zoom-value');
+        const zoomBarFill = document.getElementById('zoom-bar-fill');
+        const currentViewText = document.getElementById('current-view');
+        const warningPanel = document.getElementById('warning-panel');
+
+        // === NUCLEUS ===
         const nucleus = new THREE.Group();
         scene.add(nucleus);
+
         const protonGeo = new THREE.SphereGeometry(0.4, 32, 32);
         const neutronGeo = new THREE.SphereGeometry(0.35, 32, 32);
-        const matP = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const matN = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+        const matP = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000,
+            emissive: 0xff3333,
+            emissiveIntensity: 0.8
+        });
+        const matN = new THREE.MeshBasicMaterial({ 
+            color: 0x0000ff,
+            emissive: 0x3333ff,
+            emissiveIntensity: 0.8
+        });
 
-        const nucleonCount = 20;
-        for(let i = 0; i < nucleonCount; i++) {
+        const nucleonTrails = [];
+        for(let i = 0; i < CONFIG.MAX_NUCLEONS; i++) {
             const isProton = i % 2 === 0;
             const m = new THREE.Mesh(isProton ? protonGeo : neutronGeo, isProton ? matP : matN);
             
@@ -287,23 +449,32 @@
                 height,
                 distance * Math.sin(angle)
             );
+            m.castShadow = true;
             nucleus.add(m);
+            nucleonTrails.push({
+                mesh: m,
+                trail: [],
+                speedX: (Math.random() - 0.5) * 0.02,
+                speedY: (Math.random() - 0.5) * 0.02,
+                speedZ: (Math.random() - 0.5) * 0.02
+            });
         }
 
-        // --- SYSTEMS ---
+        // === SCENE GROUPS ===
         const cloudGroup = new THREE.Group();
         const bohrGroup = new THREE.Group();
         const quantumGroup = new THREE.Group();
+        const excitedGroup = new THREE.Group();
         scene.add(cloudGroup);
         scene.add(bohrGroup);
         scene.add(quantumGroup);
+        scene.add(excitedGroup);
 
-        // Create cloud (electron probability distribution)
+        // === PROBABILITY CLOUD ===
         const pos = [], col = [];
         const c1 = new THREE.Color(0x00ffff), c2 = new THREE.Color(0xff00ff);
-        const particleCount = 5000;
         
-        for(let i = 0; i < particleCount; i++) {
+        for(let i = 0; i < CONFIG.MAX_PARTICLES; i++) {
             const r = 2 + Math.random() * Math.random() * 6;
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.acos(2 * Math.random() - 1);
@@ -331,19 +502,19 @@
         });
         cloudGroup.add(new THREE.Points(cloudGeo, cloudMat));
 
-        // Create Bohr model
-        const eMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-        const ringMat = new THREE.LineBasicMaterial({ color: 0x00ffff, opacity: 0.3, transparent: true, linewidth: 2 });
+        // === BOHR MODEL ===
+        const eMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.6 });
+        const ringMat = new THREE.LineBasicMaterial({ color: 0x00ffff, opacity: 0.4, transparent: true });
         const electrons = [];
-        const shellCount = 8;
         
-        for(let i = 0; i < shellCount; i++) {
+        for(let i = 0; i < CONFIG.MAX_SHELLS; i++) {
             const grp = new THREE.Group();
             grp.rotation.set(Math.random() * 3, Math.random() * 3, 0);
             
             const dist = 5 + i * 0.5;
             const e = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), eMat);
             e.position.x = dist;
+            e.castShadow = true;
             
             const ringGeo = new THREE.BufferGeometry().setFromPoints(
                 new THREE.EllipseCurve(0, 0, dist, dist, 0, 6.28).getPoints(128)
@@ -355,13 +526,15 @@
             bohrGroup.add(grp);
             electrons.push({
                 grp: grp,
+                electron: e,
                 speed: 0.02 + Math.random() * 0.02,
-                direction: Math.random() > 0.5 ? 1 : -1
+                direction: Math.random() > 0.5 ? 1 : -1,
+                distance: dist
             });
         }
         bohrGroup.visible = false;
 
-        // --- QUANTUM FIELD VIEW ---
+        // === QUANTUM FIELD VIEW ===
         const quantumShells = [];
         for(let shell = 1; shell <= 4; shell++) {
             const radius = 3 + shell * 2;
@@ -401,21 +574,51 @@
         }
         quantumGroup.visible = false;
 
-        // --- VIEW SWITCHER ---
+        // === EXCITED STATE VIEW ===
+        const excitedParticles = [];
+        for(let i = 0; i < 3000; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const r = 4 + Math.random() * 8;
+            const h = (Math.random() - 0.5) * 8;
+            
+            const p = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 8, 8),
+                new THREE.MeshBasicMaterial({ 
+                    color: new THREE.Color().setHSL(Math.random(), 1, 0.6),
+                    emissive: new THREE.Color().setHSL(Math.random(), 1, 0.4),
+                    emissiveIntensity: 0.8
+                })
+            );
+            p.position.set(r * Math.cos(angle), h, r * Math.sin(angle));
+            excitedGroup.add(p);
+            excitedParticles.push({
+                mesh: p,
+                vx: (Math.random() - 0.5) * 0.1,
+                vy: (Math.random() - 0.5) * 0.1,
+                vz: (Math.random() - 0.5) * 0.1,
+                life: 1.0
+            });
+        }
+        excitedGroup.visible = false;
+
+        // === VIEW SWITCHER ===
         let currentView = 'cloud';
         let autoRotateEnabled = false;
+        let trailsEnabled = false;
         
         window.switchView = (t) => {
             currentView = t;
             bohrGroup.visible = (t === 'bohr');
             cloudGroup.visible = (t === 'cloud');
             quantumGroup.visible = (t === 'quantum');
+            excitedGroup.visible = (t === 'excited');
             
             document.getElementById('btn-bohr').classList.toggle('active', t === 'bohr');
             document.getElementById('btn-cloud').classList.toggle('active', t === 'cloud');
             document.getElementById('btn-quantum').classList.toggle('active', t === 'quantum');
+            document.getElementById('btn-excited').classList.toggle('active', t === 'excited');
             
-            currentViewText.textContent = `View: ${t.toUpperCase()}`;
+            currentViewText.textContent = t.toUpperCase();
         };
         
         window.toggleRotation = () => {
@@ -424,19 +627,39 @@
             document.getElementById('btn-rotate').classList.toggle('active', autoRotateEnabled);
         };
 
-        // --- ANIMATION LOOP ---
+        window.toggleTrails = () => {
+            trailsEnabled = !trailsEnabled;
+            document.getElementById('btn-trails').classList.toggle('active', trailsEnabled);
+        };
+
+        // === ENERGY SYSTEM ===
+        const energyLevels = [0.3, 0.5, 0.7, 0.4];
+        function updateEnergy() {
+            const avgEnergy = energyLevels.reduce((a, b) => a + b) / energyLevels.length;
+            document.getElementById('energy1').style.width = (energyLevels[0] * 100) + '%';
+            document.getElementById('energy2').style.width = (energyLevels[1] * 100) + '%';
+            document.getElementById('energy3').style.width = (energyLevels[2] * 100) + '%';
+            document.getElementById('energy4').style.width = (energyLevels[3] * 100) + '%';
+
+            const energyStatus = avgEnergy > 0.75 ? 'CRITICAL' : avgEnergy > 0.5 ? 'HIGH' : 'STABLE';
+            document.getElementById('energy-info').textContent = energyStatus;
+            document.getElementById('energy-info').style.color = avgEnergy > 0.75 ? '#ff3333' : avgEnergy > 0.5 ? '#ffff00' : '#00ff88';
+            
+            warningPanel.style.display = avgEnergy > 0.75 ? 'block' : 'none';
+        }
+
+        // === ANIMATION LOOP ===
         function animate() {
             requestAnimationFrame(animate);
 
-            // Smooth zoom interpolation
+            // Smooth zoom
             const currentDist = camera.position.length();
             const lerpDist = THREE.MathUtils.lerp(currentDist, targetDistance, 0.1);
             camera.position.setLength(lerpDist);
 
-            // 1. UPDATE HUD
+            // === HUD UPDATE ===
             const dist = camera.position.distanceTo(controls.target);
-            let percent = (dist - MAX_DIST) / (MIN_DIST - MAX_DIST) * 100;
-            
+            let percent = (dist - CONFIG.MAX_DIST) / (CONFIG.MIN_DIST - CONFIG.MAX_DIST) * 100;
             percent = Math.max(0, Math.min(100, percent));
 
             zoomValueText.innerText = Math.round(percent) + '%';
@@ -444,36 +667,84 @@
 
             if(percent > 80) {
                 zoomValueText.style.color = '#ff3333';
-                zoomValueText.style.textShadow = '0 0 15px #ff0000';
-                zoomBarFill.style.backgroundColor = '#ff3333';
-                zoomBarFill.style.boxShadow = '0 0 15px #ff0000';
+                zoomValueText.style.textShadow = '0 0 15px #ff0000, 0 0 30px #ff0000';
+                zoomBarFill.style.background = 'linear-gradient(180deg, #ff0000, #ff3333)';
+                zoomBarFill.style.boxShadow = '0 0 20px #ff0000';
             } else {
                 zoomValueText.style.color = '#00ffff';
-                zoomValueText.style.textShadow = '0 0 10px #00ffff';
-                zoomBarFill.style.backgroundColor = '#00ffff';
-                zoomBarFill.style.boxShadow = '0 0 10px #00ffff';
+                zoomValueText.style.textShadow = '0 0 20px #00ffff, 0 0 40px #0088ff';
+                zoomBarFill.style.background = 'linear-gradient(180deg, #ff00ff, #00ffff, #00ff00)';
+                zoomBarFill.style.boxShadow = '0 0 15px #00ffff';
             }
 
-            // 2. ANIMATIONS
+            // === NUCLEUS PHYSICS ===
             nucleus.rotation.y += 0.01;
+            nucleonTrails.forEach(n => {
+                n.mesh.position.x += n.speedX;
+                n.mesh.position.y += n.speedY;
+                n.mesh.position.z += n.speedZ;
+                
+                // Bounce back if too far
+                if(n.mesh.position.length() > 1.2) {
+                    n.speedX *= -0.8;
+                    n.speedY *= -0.8;
+                    n.speedZ *= -0.8;
+                }
+
+                if(trailsEnabled) {
+                    n.trail.push(n.mesh.position.clone());
+                    if(n.trail.length > CONFIG.TRAIL_LENGTH) n.trail.shift();
+                }
+            });
+
+            // === CLOUD ROTATION ===
             cloudGroup.rotation.y -= 0.002;
-            
+
+            // === QUANTUM SHELL ROTATION ===
             quantumShells.forEach((shell, idx) => {
                 shell.rotation.y += 0.001 * (idx + 1);
                 shell.rotation.x += 0.0005 * (idx + 1);
             });
-            
+
+            // === BOHR ELECTRON ORBITS ===
             electrons.forEach(e => {
                 e.grp.rotation.z += e.speed * e.direction;
             });
 
-            // 3. UPDATE CONTROLS & RENDER
+            // === EXCITED STATE ANIMATION ===
+            excitedParticles.forEach(p => {
+                p.mesh.position.add(new THREE.Vector3(p.vx, p.vy, p.vz));
+                p.life -= 0.005;
+                p.mesh.material.emissiveIntensity = p.life * 0.8;
+
+                if(p.life <= 0) {
+                    p.life = 1.0;
+                    p.mesh.position.set(
+                        (Math.random() - 0.5) * 16,
+                        (Math.random() - 0.5) * 8,
+                        (Math.random() - 0.5) * 16
+                    );
+                }
+            });
+
+            // === ENERGY FLUCTUATION ===
+            energyLevels.forEach((_, i) => {
+                energyLevels[i] += (Math.random() - 0.5) * 0.02;
+                energyLevels[i] = Math.max(0.1, Math.min(1, energyLevels[i]));
+            });
+            updateEnergy();
+
+            // === TEMPERATURE ===
+            currentTemp = energyLevels.reduce((a, b) => a + b) / energyLevels.length * 1000;
+            document.getElementById('temp-info').textContent = Math.round(currentTemp) + 'K';
+
+            // === RENDER ===
             controls.update();
             composer.render();
             updateStats();
         }
 
-        // --- RESIZE HANDLER ---
+        // === RESIZE HANDLER ===
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -485,4 +756,3 @@
     </script>
 </body>
 </html>
-
